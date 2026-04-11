@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Carousel } from "@material-tailwind/react";
 
-import "flowbite";
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
