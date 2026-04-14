@@ -46,6 +46,19 @@ function App() {
 
   return (
     <>
+
+    <div className="relative min-h-screen w-full overflow-hidden">
+
+      <div className="absolute inset-0 grid grid-cols-4 gap-3 -z-10">
+          <img className="h-full w-full object-cover" src="/seis.jpeg" alt="" />
+          <img className="h-full w-full object-cover" src="/cinco.jpeg" alt="" />
+          <img className="h-full w-full object-cover" src="/tres.jpeg" alt="" />
+          <img className="h-full w-full object-cover" src="/cuatro.jpeg" alt="" />
+          <img className="h-full w-full object-cover" src="/uno.jpeg" alt="" />
+          <img className="h-full w-full object-cover" src="/dos.jpeg" alt="" />
+          <img className="h-full w-full object-cover" src="/siete.jpeg" alt="" />
+          <img className="h-full w-full object-cover" src="/ocho.jpeg" alt="" />
+      </div>
       <div className="min-h-screen flex items-start justify-center pt-40">
 
         <form 
@@ -84,7 +97,7 @@ function App() {
           </div>
         </form>
       </div>
-      
+    </div>
 
       {/* <div className="grid grid-cols-4 gap-3">
 
