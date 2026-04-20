@@ -17,6 +17,8 @@ function App() {
     "Contigo, cada día es especial 🌟",
     "Eres mi alegría diaria 😊",
     ,"Gracias por ser tú, mi amor 💗"
+    ,"Te extraño bb"
+    ,"Te quiero abrazarr y no soltar"
   ];
 
   // IMPORTANTE: Asegúrate de que estas fotos existan en tu carpeta /public
@@ -59,6 +61,18 @@ function App() {
           <img className="h-full w-full object-cover" src="/siete.jpeg" alt="" />
           <img className="h-full w-full object-cover" src="/ocho.jpeg" alt="" />
       </div>
+
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      <div className="absolute top-20 animate-fly-plane">
+        <div className="relative flex items-center">
+          <img src="/avioneta.png" className="h-16 w-auto" alt="Avioncito" />
+        </div>
+      </div>
+    </div>
+
+
+
+
       <div className="min-h-screen flex items-start justify-center pt-40">
 
         <form 
@@ -98,26 +112,6 @@ function App() {
         </form>
       </div>
     </div>
-
-      {/* <div className="grid grid-cols-4 gap-3">
-
-        <img class="h-68 w-126 md:object-contain  ..." src="/uno.jpeg" />
-
-        <img class="h-68 w-126 md:object-contain  ..." src="/dos.jpeg" />
-
-        <img class="h-68 w-126 md:object-contain  ..." src="/tres.jpeg" />
-
-        <img class="h-68 w-126 md:object-contain  ..." src="/cuatro.jpeg" />
-
-        <img class="h-68 w-126 md:object-contain  ..." src="/cinco.jpeg" />
-
-        <img class="h-68 w-126 md:object-contain  ..." src="/seis.jpeg" />
-
-        <img class="h-68 w-126 md:object-contain  ..." src="/siete.jpeg" />
-
-        <img class="h-68 w-126 md:object-contain  ..." src="/ocho.jpeg" />
-      
-      </div> */}
     </>
 
   );
