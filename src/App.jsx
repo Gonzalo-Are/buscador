@@ -18,7 +18,7 @@ function App() {
     "Eres mi alegría diaria 😊",
     ,"Gracias por ser tú, mi amor 💗"
     ,"Te extraño bb"
-    ,"Te quiero abrazarr y no soltar"
+    ,"Te quiero abrazar y no soltar"
   ];
 
   // IMPORTANTE: Asegúrate de que estas fotos existan en tu carpeta /public
@@ -45,6 +45,40 @@ function App() {
   );
 
   
+  useEffect(() => {
+  const targetDate = new Date("2026-07-15T20:30:00-04:00").getTime();
+
+  const timer = setInterval(() => {
+    const now = new Date().getTime();
+    const distance = targetDate - now;
+
+    const timerElement = document.getElementById("countdown-timer");
+    const messageElement = document.getElementById("arrival-message");
+
+    if (distance < 0) {
+      clearInterval(timer);
+      if (timerElement) timerElement.classList.add("hidden");
+      if (messageElement) messageElement.classList.remove("hidden");
+      
+      // Lanzar confeti (asegúrate de tener instalada la librería canvas-confetti)
+      // npm install canvas-confetti
+      return;
+    }
+
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    if (timerElement) {
+      timerElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
+  }, 1000);
+
+  return () => clearInterval(timer); // Limpiar al desmontar
+}, []);
+
+
 
   return (
     <>
@@ -73,10 +107,10 @@ function App() {
 
 
 
-      <div className="min-h-screen flex items-start justify-center pt-40">
+      <div className="min-h-screen flex flex-col items-center justify-start pt-40 z-10">
 
         <form 
-          className="w-full max-w-2xl mx-auto mt-10 px-4"
+          className="w-full max-w-2xl mx-auto px-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (searchTerm.trim()) {
@@ -110,6 +144,17 @@ function App() {
             </button>
           </div>
         </form>
+
+        <div className="mt-6 w-full max-w-lg text-center bg-white/75  p-4 rounded-2xl shadow-lg border border-white/20 mx-4">
+          <h2 className="text-gray-700 font-medium mb-1 text-sm uppercase tracking-wider">Días para ver a mi novia</h2>
+          <div id="countdown-timer" className="text-3xl md:text-4xl font-bold text-gray-800 tracking-tight">
+            00d 00h 00m 00s
+          </div>
+          <div id="arrival-message" className="hidden text-xl font-bold text-pink-600 animate-bounce mt-2">
+            Agarrate wacha que voy llegando así
+          </div>
+        </div>
+
       </div>
     </div>
     </>
