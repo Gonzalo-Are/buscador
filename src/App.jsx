@@ -2,12 +2,16 @@ import { useEffect, useState } from "react";
 import { Carousel } from "@material-tailwind/react";
 
 
+
+
+
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [placeholderText, setPlaceholderText] = useState("");
-  
+  const [showPhoto, setShowPhoto] = useState(true);
 
-  
+  const [amorCount, setAmorCount] = useState(0);
+  const [fuegoCount, setFuegoCount] = useState(0);
 
   const messages = [
     "La mejor polola del mundo ❤️",
@@ -17,8 +21,10 @@ function App() {
     "Contigo, cada día es especial 🌟",
     "Eres mi alegría diaria 😊",
     ,"Gracias por ser tú, mi amor 💗"
-    ,"Te extraño bb"
-    ,"Te quiero abrazar y no soltar"
+    ,"Te extraño bb 🥺"
+    ,"Te quiero abrazar y no soltar🥺"
+    ,"Estoy loco por ti💖 "
+    ,"Cada dia que pasa me enamoro mas 💗"
   ];
 
   // IMPORTANTE: Asegúrate de que estas fotos existan en tu carpeta /public
@@ -75,7 +81,9 @@ function App() {
     }
   }, 1000);
 
-  return () => clearInterval(timer); // Limpiar al desmontar
+  return () => clearInterval(timer); 
+
+  
 }, []);
 
 
@@ -84,6 +92,20 @@ function App() {
     <>
 
     <div className="relative min-h-screen w-full overflow-hidden">
+
+      <div className="absolute top-5 right-5 flex gap-3 z-50">
+  
+        <button 
+          onClick={() => setAmorCount(amorCount + 1)}
+          className="flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 rounded-full text-white hover:scale-110 active:scale-95 transition-all shadow-lg group"
+        >
+          <span className="text-xl group-hover:animate-pulse">❤️</span>
+          <span className="font-bold text-gray-800">{amorCount}</span>
+        </button>
+        
+      </div>
+
+
 
       <div className="absolute inset-0 grid grid-cols-4 gap-3 -z-10">
           <img className="h-full w-full object-cover" src="/seis.jpeg" alt="" />
@@ -146,7 +168,7 @@ function App() {
         </form>
 
         <div className="mt-6 w-full max-w-lg text-center bg-white/75  p-4 rounded-2xl shadow-lg border border-white/20 mx-4">
-          <h2 className="text-gray-700 font-medium mb-1 text-sm uppercase tracking-wider">Días para ver a mi novia</h2>
+          <h2 className="text-gray-700 font-medium mb-1 text-sm uppercase tracking-wider">Días para ver a mi novio</h2>
           <div id="countdown-timer" className="text-3xl md:text-4xl font-bold text-gray-800 tracking-tight">
             00d 00h 00m 00s
           </div>
@@ -156,6 +178,22 @@ function App() {
         </div>
 
       </div>
+
+                    {showPhoto && (
+          <div className="fixed inset-0 flex items-center justify-center z-[100] animate-fade-out pointer-events-none">
+            <div className="bg-white p-2 rounded-2xl shadow-2xl rotate-3">
+              <img 
+                src="/4f012bb1246710dccc532d0ce3a7e992.900x900x1.jpg" 
+                alt="Sorpresa" 
+                className="w-220 h-220 object-cover rounded-xl"
+              />
+             
+            </div>
+          </div>
+        )}
+
+
+
     </div>
     </>
 

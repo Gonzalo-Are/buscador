@@ -17,5 +17,28 @@ body {
 }
 
 .animate-fly-plane {
-  animation: fly 15s linear infinite;
+  animation: fly 20s linear infinite;
+}
+
+@keyframes fadeOut {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.8) rotate(0deg); 
+  }
+  10% { 
+    opacity: 1; 
+    transform: scale(1) rotate(3deg); 
+  } /* Aparece rápido al principio */
+  70% { 
+    opacity: 1; 
+    transform: scale(1) rotate(3deg); 
+  } /* Se mantiene visible */
+  100% { 
+    opacity: 0; 
+    transform: scale(1.1) rotate(5deg); 
+  } /* Se desvanece lentamente mientras crece un poco */
+}
+
+.animate-fade-out {
+  animation: fadeOut 2s ease-in-out forwards;
 }
