@@ -179,19 +179,6 @@ function App() {
 
       </div>
 
-                    {showPhoto && (
-          <div className="fixed inset-0 flex items-center justify-center z-[100] animate-fade-out pointer-events-none">
-            <div className="bg-white p-2 rounded-2xl shadow-2xl rotate-3">
-              <img 
-                src="/4f012bb1246710dccc532d0ce3a7e992.900x900x1.jpg" 
-                alt="Sorpresa" 
-                className="w-220 h-220 object-cover rounded-xl"
-              />
-             
-            </div>
-          </div>
-        )}
-
 
 
     </div>
