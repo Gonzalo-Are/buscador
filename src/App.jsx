@@ -12,6 +12,7 @@ function App() {
 
   const [amorCount, setAmorCount] = useState(0);
   const [fuegoCount, setFuegoCount] = useState(0);
+  const [butterflies, setButterflies] = useState([]);
 
   const messages = [
     "La mejor polola del mundo ❤️",
@@ -83,6 +84,16 @@ function App() {
 
   return () => clearInterval(timer); 
 
+
+  useEffect(() => {
+  if (showButterfly) {
+    const timer = setTimeout(() => {
+      setShowButterfly(false);
+    }, 32000); // 32 segundos, que es lo que dura tu animación 'flyButterfly'
+    return () => clearTimeout(timer);
+  }
+}, [showButterfly]);
+
   
 }, []);
 
@@ -93,19 +104,33 @@ function App() {
 
     <div className="relative min-h-screen w-full overflow-hidden">
 
-      <div className="absolute top-5 right-5 flex gap-3 z-50">
-  
-        <button 
-          onClick={() => setAmorCount(amorCount + 1)}
-          className="flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 rounded-full text-white hover:scale-110 active:scale-95 transition-all shadow-lg group"
-        >
-          <span className="text-xl group-hover:animate-pulse">❤️</span>
-          <span className="font-bold text-gray-800">{amorCount}</span>
-        </button>
-        
-      </div>
+          <div className="absolute top-5 right-5 flex gap-3 z-50">
+      
+            <button 
+              onClick={() => {
+                setAmorCount(amorCount + 1);
+                const newId = Date.now(); // Un ID único para cada mariposa
+                setButterflies([...butterflies, newId]);
 
+                // Opcional: Que cada mariposa desaparezca solita después de 30s para no colapsar el PC
+                setTimeout(() => {
+                  setButterflies(prev => prev.filter(id => id !== newId));
+                }, 32000);
+              }}
+              className="flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 rounded-full text-white hover:scale-110 active:scale-95 transition-all shadow-lg group"
+            >
+              <span className="text-xl group-hover:animate-pulse">❤️</span>
+              <span className="font-bold text-gray-800">{amorCount}</span>
+            </button>
+            
+          </div>
 
+            {butterflies.map((id) => (
+        <div key={id} className="butterfly">
+          <div className="wing left"></div>
+          <div className="wing right"></div>
+        </div>
+      ))}
 
       <div className="absolute inset-0 grid grid-cols-4 gap-3 -z-10">
           <img className="h-full w-full object-cover" src="/seis.jpeg" alt="" />
