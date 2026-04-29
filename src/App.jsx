@@ -109,12 +109,22 @@ function App() {
             <button 
               onClick={() => {
                 setAmorCount(amorCount + 1);
-                const newId = Date.now(); // Un ID único para cada mariposa
-                setButterflies([...butterflies, newId]);
+                
+                const getCoord = (unit) => (Math.floor(Math.random() * 90) - 45) + unit;
 
-                // Opcional: Que cada mariposa desaparezca solita después de 30s para no colapsar el PC
+                  const randomCoords = {
+                    x1: getCoord("vw"),
+                    y1: getCoord("vh"),
+                    x2: getCoord("vw"),
+                    y2: getCoord("vh"),
+                  };
+
+                const newId = Date.now();
+                // Guardamos la mariposa con sus propias coordenadas
+                setButterflies([...butterflies, { id: newId, coords: randomCoords }]);
+
                 setTimeout(() => {
-                  setButterflies(prev => prev.filter(id => id !== newId));
+                  setButterflies(prev => prev.filter(b => b.id !== newId));
                 }, 32000);
               }}
               className="flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 rounded-full text-white hover:scale-110 active:scale-95 transition-all shadow-lg group"
@@ -125,13 +135,21 @@ function App() {
             
           </div>
 
-            {butterflies.map((id) => (
-        <div key={id} className="butterfly">
-          <div className="wing left"></div>
-          <div className="wing right"></div>
-        </div>
-      ))}
-
+            {butterflies.map((butterfly) => (
+            <div 
+              key={butterfly.id} 
+              className="butterfly"
+              style={{
+                "--x1": butterfly.coords.x1,
+                "--y1": butterfly.coords.y1,
+                "--x2": butterfly.coords.x2,
+                "--y2": butterfly.coords.y2,
+              }}
+            >
+              <div className="wing left"></div>
+              <div className="wing right"></div>
+            </div>
+          ))}
       <div className="absolute inset-0 grid grid-cols-4 gap-3 -z-10">
           <img className="h-full w-full object-cover" src="/seis.jpeg" alt="" />
           <img className="h-full w-full object-cover" src="/cinco.jpeg" alt="" />

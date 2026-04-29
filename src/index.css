@@ -59,19 +59,27 @@ body {
   height: 100px;
   width: 200px;
   perspective: 400px;
-  animation: flyButterfly 32s infinite; /* Nombre único */
-  margin: 0 auto;
-  position: absolute;
+  animation: flyButterfly 32s infinite;
+  margin: 0; /* Quitamos el margin auto */
+  position: fixed; /* O absolute */
+  top: 50%; /* La centramos verticalmente */
+  left: 50%; /* La centramos horizontalmente */
+  transform: translate(-50%, -50%); /* Ajuste fino para centrar su propio cuerpo */
   pointer-events: none;
+  z-index: 100;
 }
 
 @keyframes flyButterfly {
-  0% { transform: translate(0, 0) rotate(0); }
-  20% { transform: translate(40vw, 30vh) rotate(20deg) scale(1.1); }
-  40% { transform: translate(20vw, 60vh) rotate(-60deg) scale(1.4); }
-  60% { transform: translate(30vw, 40vh) rotate(-10deg) scale(1.1); }
-  80% { transform: translate(8040vw, 20vh) rotate(20deg) scale(0.9); }
-  100% { transform: translate(0, 0) rotate(0); }
+  0% { transform: translate(0, 0) rotate(0deg); }
+  33% { 
+    /* Usamos las variables --x1 y --y1 */
+    transform: translate(var(--x1), var(--y1)) rotate(45deg); 
+  }
+  66% { 
+    /* Usamos las variables --x2 y --y2 */
+    transform: translate(var(--x2), var(--y2)) rotate(-45deg); 
+  }
+  100% { transform: translate(0, 0) rotate(0deg); }
 }
 
 .butterfly div {
