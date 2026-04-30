@@ -26,6 +26,9 @@ function App() {
     ,"Te quiero abrazar y no soltar🥺"
     ,"Estoy loco por ti💖 "
     ,"Cada dia que pasa me enamoro mas 💗"
+    ,"Ya quiero darte mil besitos 🥰"
+    ,"Me cambiaste la vida amor 💕"
+    ,"Contigo, todo es mejor 💖"
   ];
 
   // IMPORTANTE: Asegúrate de que estas fotos existan en tu carpeta /public
@@ -164,7 +167,7 @@ function App() {
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
       <div className="absolute top-20 animate-fly-plane">
         <div className="relative flex items-center">
-          <img src="/avioneta.png" className="h-16 w-auto" alt="Avioncito" />
+          <img src="/pngtree-image-with-airplane-theme-3-message-travel-man-vector-png-image_8792442.jpg" className="h-30 w-auto" alt="Avioncito" />
         </div>
       </div>
     </div>
