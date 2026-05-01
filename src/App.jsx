@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import { Carousel } from "@material-tailwind/react";
 
-
-
-
-
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [placeholderText, setPlaceholderText] = useState("");
