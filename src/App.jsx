@@ -9,6 +9,8 @@ function App() {
   const [amorCount, setAmorCount] = useState(0);
   const [fuegoCount, setFuegoCount] = useState(0);
   const [butterflies, setButterflies] = useState([]);
+  const [showSurprise, setShowSurprise] = useState(false);
+
 
   const messages = [
     "La mejor polola del mundo ❤️",
@@ -34,6 +36,22 @@ function App() {
     { src: "/tres.jpeg", tags: "viaje playa vacaciones sol" },
     { src: "/cuatro.jpeg", tags: "sonrisa linda hermosa" },
   ];
+
+  useEffect(() => {
+  // Espera 5 segundos para aparecer
+  const timerAppear = setTimeout(() => {
+    setShowSurprise(true);
+    
+    // Espera 3 segundos más (en el segundo 8) para desaparecer
+    const timerDisappear = setTimeout(() => {
+      setShowSurprise(false);
+    }, 3000); // Duración de la foto en pantalla
+
+    return () => clearTimeout(timerDisappear);
+  }, 5000); // Tiempo de espera inicial
+
+  return () => clearTimeout(timerAppear);
+}, []);
 
   useEffect(() => {
     let i = 0;
@@ -220,6 +238,22 @@ function App() {
         </div>
 
       </div>
+
+      {showSurprise && (
+  <div className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none">
+    <div className="animate-surprise">
+      <img 
+        src="WhatsApp Image 2026-05-05 at 18.43.12.jpeg" 
+        alt="Sorpresa" 
+        /* 'rounded-full' para círculo, o 'rounded-3xl' para bordes muy suaves */
+        className="w-100 h-100 object-cover rounded-3xl shadow-2xl border border-white/20"
+      />
+      <p className="text-center mt-4 font-medium text-white text-2xl drop-shadow-lg">
+        Te extraña 
+      </p>
+    </div>
+  </div>
+)}
 
 
 
