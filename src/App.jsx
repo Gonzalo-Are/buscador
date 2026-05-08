@@ -11,6 +11,7 @@ function App() {
   const [butterflies, setButterflies] = useState([]);
   const [showSurprise, setShowSurprise] = useState(false);
 
+  const [isLetterOpen, setIsLetterOpen] = useState(false);
 
   const messages = [
     "La mejor polola del mundo ❤️",
@@ -37,21 +38,7 @@ function App() {
     { src: "/cuatro.jpeg", tags: "sonrisa linda hermosa" },
   ];
 
-  useEffect(() => {
-  // Espera 5 segundos para aparecer
-  const timerAppear = setTimeout(() => {
-    setShowSurprise(true);
-    
-    // Espera 3 segundos más (en el segundo 8) para desaparecer
-    const timerDisappear = setTimeout(() => {
-      setShowSurprise(false);
-    }, 3000); // Duración de la foto en pantalla
-
-    return () => clearTimeout(timerDisappear);
-  }, 5000); // Tiempo de espera inicial
-
-  return () => clearTimeout(timerAppear);
-}, []);
+  
 
   useEffect(() => {
     let i = 0;
@@ -236,21 +223,52 @@ function App() {
             Agarrate wacha que voy llegando así
           </div>
         </div>
+      
+      {!isLetterOpen && (
+  <div className="flex justify-center mt-8">
+    <button
+      onClick={() => setIsLetterOpen(true)}
+      className="bg-white/30 backdrop-blur-md border border-white/50 px-6 py-3 rounded-full text-white font-bold hover:bg-white/50 transition-all shadow-xl hover:scale-110 active:scale-95"
+    >
+      📩
+    </button>
+  </div>
+)}
+
 
       </div>
 
-      {showSurprise && (
-  <div className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none">
-    <div className="animate-surprise">
-      <img 
-        src="WhatsApp Image 2026-05-05 at 18.43.12.jpeg" 
-        alt="Sorpresa" 
-        /* 'rounded-full' para círculo, o 'rounded-3xl' para bordes muy suaves */
-        className="w-100 h-100 object-cover rounded-3xl shadow-2xl border border-white/20"
-      />
-      <p className="text-center mt-4 font-medium text-white text-2xl drop-shadow-lg">
-        Te extraña 
-      </p>
+          {isLetterOpen && (
+  <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div className="relative bg-[#fdf6e3] w-full max-w-2xl max-h-[80vh] overflow-y-auto p-8 md:p-12 rounded-sm shadow-2xl border-l-[20px] border-pink-200">
+      
+      {/* Botón de Cerrar */}
+      <button 
+        onClick={() => setIsLetterOpen(false)}
+        className="absolute top-4 right-4 text-gray-400 hover:text-pink-600 transition-colors text-2xl"
+      >
+        ✖
+      </button>
+
+      <div className="font-serif text-gray-800 space-y-6">
+        <h2 className="text-3xl font-bold text-pink-600 mb-8 italic">Mi amor,</h2>
+        
+        <p className="leading-relaxed text-lg">
+          Te escribo esta cartita para decirte todo lo que te quiero, han pasado muchos meses desde la ultima vez que te vi, y para ser sincero, mi amor y cariño que siento por ti no ha disminiuido nada, literalmente sube cada dia mas. Es impresionante para mi como estas en mi cabeza constantemente y las cosas que provocas en mi, de verdad que no lo entenderias todo lo que yo siento por ti, es mucho mucho mucho muchooooooooooo.
+          Ya queda poquito bb, ya nos vamos a ver y prometo estar pegado a ti como un chicle y hacerte la persona mas feliz del mundo, porque te lo mereces corazon.
+        </p>
+
+        <p className="leading-relaxed text-lg">
+
+           Siempre te quize escribir una carta, obviamente esta no es la primera, por que esta la estoy escribiendo en un pc, pero cuando llegue para tus brazos te dare una a tu manito solo para ti. Escribo esto por que queria decirte lo mucho que te quiero, enverdad las palabras se quedan cortas, y esta pagina que hice para ti es algo muy lindo que empezo todo como una idea mala en mi cabeza pero termino siendo algo hermoso (como tu) y que cada vez que lo veo sonrio, onda era para ti y termino tambien siendo para mi. Gracias por todo amorcito. 
+
+
+        </p>
+        <div className="pt-10 text-right">
+          <p className="italic text-xl">Con todo mi amor,</p>
+          <p className="font-bold text-2xl text-pink-600 mt-2">Tu bb ❤️</p>
+        </div>
+      </div>
     </div>
   </div>
 )}
