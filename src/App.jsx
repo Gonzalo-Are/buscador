@@ -152,7 +152,7 @@ function App() {
       {/* AVIONCITO */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-20 animate-fly-plane">
-          <img src="/pngtree-image-with-airplane-theme-3-message-travel-man-vector-png-image_8792442.jpg" className="h-30 w-auto" alt="Avioncito" />
+          <img src="/pngtree-image-with-airplane-theme-3-message-travel-man-vector-png-image_8792442.jpg" className="h-40 w-auto" alt="Avioncito" />
         </div>
       </div>
 
