@@ -9,6 +9,11 @@ function App() {
   const [butterflies, setButterflies] = useState([]);
   const [corazones, setCorazones] = useState(0);
   const [isLetterOpen, setIsLetterOpen] = useState(false);
+  
+  // Estados nuevos para el control de fotos dinámicas
+  const [fotosFondo, setFotosFondo] = useState([]);
+  const [cargandoFotoId, setCargandoFotoId] = useState(null);
+  const [isPanelFotosOpen, setIsPanelFotosOpen] = useState(false);
 
   const messages = [
     "La mejor polola del mundo ❤️", "Mi persona favorita 💕", "Te quiero demasiado 🫶",
@@ -46,7 +51,82 @@ function App() {
     cargarMensaje();
   }, []);
 
-  // 3. Guardar nuevo mensaje
+  // 3. Cargar las fotos del fondo desde la Base de Datos (Mantiene tu orden exacto)
+  useEffect(() => {
+    const cargarFotosFondo = async () => {
+      const { data, error } = await supabase
+        .from('fotos_pantalla')
+        .select('*')
+        .order('posicion', { ascending: true });
+
+      if (error) {
+        console.error("Error cargando fotos:", error.message);
+      } else if (data && data.length > 0) {
+        setFotosFondo(data);
+      } else {
+        // Respaldo local con tu orden exacto si la BD está vacía al inicio
+        setFotosFondo([
+          { id: 1, posicion: 1, url_imagen: '/seis.jpeg' },
+          { id: 2, posicion: 2, url_imagen: '/cinco.jpeg' },
+          { id: 3, posicion: 3, url_imagen: '/tres.jpeg' },
+          { id: 4, posicion: 4, url_imagen: '/cuatro.jpeg' },
+          { id: 5, posicion: 5, url_imagen: '/uno.jpeg' },
+          { id: 6, posicion: 6, url_imagen: '/dos.jpeg' },
+          { id: 7, posicion: 7, url_imagen: '/siete.jpeg' },
+          { id: 8, posicion: 8, url_imagen: '/ocho.jpeg' },
+        ]);
+      }
+    };
+    cargarFotosFondo();
+  }, []);
+
+  // 4. Función para subir y cambiar una foto de fondo en el Storage y BD
+  const cambiarFotoFondo = async (e, fotoId, posicion) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setCargandoFotoId(fotoId);
+
+    try {
+      // Nombre único para el archivo usando la posición y timestamp
+      const fileExt = file.name.split('.').pop();
+      const fileName = `fondo_${posicion}_${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // A. Subir la imagen al Bucket de Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('fotos-fondo')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // B. Obtener la URL pública de la imagen recién subida
+      const { data: urlData } = supabase.storage
+        .from('fotos-fondo')
+        .getPublicUrl(filePath);
+
+      const nuevaUrl = urlData.publicUrl;
+
+      // C. Actualizar el registro en la tabla de la Base de Datos
+      const { error: updateError } = await supabase
+        .from('fotos_pantalla')
+        .update({ url_imagen: nuevaUrl })
+        .eq('id', fotoId);
+
+      if (updateError) throw updateError;
+
+      // D. Actualizar el estado dinámico en tiempo real
+      setFotosFondo(prev => prev.map(f => f.id === fotoId ? { ...f, url_imagen: nuevaUrl } : f));
+
+    } catch (error) {
+      console.error("Error al cambiar la foto:", error.message);
+      alert("No se pudo subir la imagen. Revisa los logs de la consola.");
+    } finally {
+      setCargandoFotoId(null);
+    }
+  };
+
+  // 5. Guardar nuevo mensaje diario
   const guardarMensaje = async () => {
     if (!mensaje.trim()) return;
     const { error } = await supabase
@@ -61,15 +141,11 @@ function App() {
     }
   };
 
-  // 4. Lógica de Corazón (Persistencia + Mariposas)
+  // 6. Lógica de Corazón (Persistencia + Mariposas)
   const manejarClickCorazon = async () => {
-    // Optimistic update: sube el número visualmente de inmediato
     setCorazones(prev => prev + 1);
-    
-    // Llamada a Supabase para sumar 1 en la base de datos
     await supabase.rpc('increment_hearts');
 
-    // Lógica de mariposas
     const getCoord = (unit) => (Math.floor(Math.random() * 90) - 45) + unit;
     const randomCoords = {
       x1: getCoord("vw"), y1: getCoord("vh"),
@@ -83,7 +159,7 @@ function App() {
     }, 32000);
   };
 
-  // 5. Placeholder dinámico
+  // 7. Placeholder dinámico del buscador
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
@@ -93,7 +169,7 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // 6. Timer de cuenta regresiva
+  // 8. Timer de cuenta regresiva
   useEffect(() => {
     const targetDate = new Date("2026-07-15T20:30:00-04:00").getTime();
     const timer = setInterval(() => {
@@ -134,7 +210,7 @@ function App() {
         </button>
       </div>
 
-      {/* MARIPOSAS */}
+      {/* MARIPOSAS EN PANTALLA */}
       {butterflies.map((butterfly) => (
         <div key={butterfly.id} className="butterfly" style={{ "--x1": butterfly.coords.x1, "--y1": butterfly.coords.y1, "--x2": butterfly.coords.x2, "--y2": butterfly.coords.y2 }}>
           <div className="wing left"></div>
@@ -142,22 +218,25 @@ function App() {
         </div>
       ))}
 
-      {/* FONDO DE FOTOS */}
-      <div className="absolute inset-0 grid grid-cols-4 gap-3 -z-10">
-        {["seis", "cinco", "tres", "cuatro", "uno", "dos", "siete", "ocho"].map(n => (
-          <img key={n} className="h-full w-full object-cover" src={`/${n}.jpeg`} alt="" />
+      <div className="absolute inset-0 grid grid-cols-4 gap-3 -z-10 ">
+        {fotosFondo.map((foto) => (
+          <div key={foto.id} className="relative w-full h-full overflow-hidden">
+            <img 
+              className={`h-full w-full object-cover transition-opacity duration-300 ${cargandoFotoId === foto.id ? 'opacity-30' : 'opacity-100'}`} 
+              src={foto.url_imagen} 
+              alt={`Foto ${foto.posicion}`} 
+            />
+          </div>
         ))}
       </div>
 
-      {/* AVIONCITO */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-20 animate-fly-plane">
-          <img src="/pngtree-image-with-airplane-theme-3-message-travel-man-vector-png-image_8792442.jpg" className="h-40 w-auto" alt="Avioncito" />
+          <img src="/pngtree-image-with-airplane-theme-3-message-travel-man-vector-png-image_8792442.jpg" className="h-30 w-auto" alt="Avioncito" />
         </div>
       </div>
 
       <div className="min-h-screen flex flex-col items-center justify-start pt-40 z-10">
-        {/* BUSCADOR GOOGLE */}
         <form className="w-full max-w-2xl mx-auto px-4" action="https://www.google.com/search" method="GET" target="_blank"> 
           <div className="relative">
             <input type="search" name="q" className="block w-full p-4 ps-12 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-pink-500 shadow-sm outline-none" placeholder={placeholderText} required />
@@ -165,21 +244,18 @@ function App() {
           </div>
         </form>
 
-        {/* CONTADOR TIEMPO */}
         <div className="mt-6 w-full max-w-lg text-center bg-white/75 p-4 rounded-2xl shadow-lg border border-white/20 mx-4">
           <h2 className="text-gray-700 font-medium mb-1 text-sm uppercase tracking-wider">Días para ver a mi novio</h2>
           <div id="countdown-timer" className="text-3xl md:text-4xl font-bold text-gray-800 tracking-tight">00d 00h 00m 00s</div>
           <div id="arrival-message" className="hidden text-xl font-bold text-pink-600 animate-bounce mt-2">Agarrate wacha que voy llegando así</div>
         </div>
       
-        {/* BOTÓN CARTA */}
         {!isLetterOpen && (
           <div className="flex justify-center mt-8">
             <button onClick={() => setIsLetterOpen(true)} className="bg-white/30 backdrop-blur-md border border-white/50 px-6 py-3 rounded-full text-white font-bold hover:bg-white/50 transition-all shadow-xl hover:scale-110 active:scale-95">📩</button>
           </div>
         )}
 
-        {/* MENSAJE DIARIO */}
         <div className="w-full max-w-md mx-auto mt-10 px-4 mb-10"> 
           <div className="bg-[#FFC4E1] rounded-[20px] p-6 shadow-xl border-none">
             <h3 className="text-white font-bold mb-4 text-center flex items-center justify-center gap-2"><span>✨</span> Mensaje de Hoy <span>✨</span></h3>
@@ -197,33 +273,65 @@ function App() {
         </div>
       </div>
 
-      {/* MODAL CARTA */}
       {isLetterOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="relative bg-[#fdf6e3] w-full max-w-2xl max-h-[80vh] overflow-y-auto p-8 md:p-12 rounded-sm shadow-2xl border-l-[20px] border-pink-200">
             <button onClick={() => setIsLetterOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-pink-600 text-2xl">✖</button>
             <div className="font-serif text-gray-800 space-y-6">
               <h2 className="text-3xl font-bold text-pink-600 mb-8 italic">Mi amor,</h2>
-        
-        <p className="leading-relaxed text-lg">
-          Te escribo esta cartita para decirte todo lo que te quiero, han pasado muchos meses desde la ultima vez que te vi, y para ser sincero, mi amor y cariño que siento por ti no ha disminiuido nada, literalmente sube cada dia mas. Es impresionante para mi como estas en mi cabeza constantemente y las cosas que provocas en mi, de verdad que no lo entenderias todo lo que yo siento por ti, es mucho mucho mucho muchooooooooooo.
-          Ya queda poquito bb, ya nos vamos a ver y prometo estar pegado a ti como un chicle y hacerte la persona mas feliz del mundo, porque te lo mereces corazon.
-        </p>
-
-        <p className="leading-relaxed text-lg">
-
-           Siempre te quize escribir una carta, obviamente esta no es la primera, por que esta la estoy escribiendo en un pc, pero cuando llegue para tus brazos te dare una a tu manito solo para ti. Escribo esto por que queria decirte lo mucho que te quiero, enverdad las palabras se quedan cortas, y esta pagina que hice para ti es algo muy lindo que empezo todo como una idea mala en mi cabeza pero termino siendo algo hermoso (como tu) y que cada vez que lo veo sonrio, onda era para ti y termino tambien siendo para mi. Gracias por todo amorcito. 
-
-
-        </p>
-        <div className="pt-10 text-right">
-          <p className="italic text-xl">Con todo mi amor,</p>
-          <p className="font-bold text-2xl text-pink-600 mt-2">Tu bb ❤️</p>
+              <p className="leading-relaxed text-lg">Te escribo esta cartita para decirte todo lo que te quiero, han pasado muchos meses desde la ultima vez que te vi, y para ser sincero, mi amor y cariño que siento por ti no ha disminiuido nada, literalmente sube cada dia mas. Es impresionante para mi como estas en mi cabeza constantemente y las cosas que provocas en mi, de verdad que no lo entenderias todo lo que yo siento por ti, es mucho mucho mucho muchooooooooooo. Ya queda poquito bb, ya nos vamos a ver y prometo estar pegado a ti como un chicle y hacerte la persona mas feliz del mundo, porque te lo mereces corazon.</p>
+              <p className="leading-relaxed text-lg">Siempre te quize escribir una carta, obviamente esta no es la primera, por que esta la estoy escribiendo en un pc, pero cuando llegue para tus brazos te dare una a tu manito solo para ti. Escribo esto por que queria decirte lo mucho que te quiero, enverdad las palabras se quedan cortas, y esta pagina que hice para ti es algo muy lindo que empezo todo como una idea mala en mi cabeza pero termino siendo algo hermoso (como tu) y que cada vez que lo veo sonrio, onda era para ti y termino tambien siendo para mi. Gracias por todo amorcito.</p>
+              <div className="pt-10 text-right">
+                <p className="italic text-xl">Con todo mi amor,</p>
+                <p className="font-bold text-2xl text-pink-600 mt-2">Tu bb ❤️</p>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      <div className="fixed bottom-5 left-5 z-[100]">
+        <button 
+          onClick={() => setIsPanelFotosOpen(!isPanelFotosOpen)}
+          className="bg-white/80 backdrop-blur-md border border-white/40 p-3 rounded-full shadow-2xl text-xl hover:scale-110 active:scale-95 transition-all cursor-pointer"
+          title="Cambiar fotos de fondo"
+        >
+          🖼️
+        </button>
+
+        {isPanelFotosOpen && (
+          <div className="absolute bottom-14 left-0 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-gray-200 w-64 text-gray-800">
+            <h4 className="font-bold text-sm mb-2 text-center text-gray-700">Elige el número de foto a cambiar:</h4>
+            
+            <div className="grid grid-cols-4 gap-2">
+              {fotosFondo.map((foto) => (
+                <label 
+                  key={foto.id} 
+                  className={`flex items-center justify-center h-10 w-10 font-bold rounded-lg border cursor-pointer transition-all ${
+                    cargandoFotoId === foto.id 
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed animate-pulse" 
+                      : "bg-pink-50 hover:bg-pink-200 border-pink-200 text-pink-600 active:scale-90"
+                  }`}
+                >
+                  {cargandoFotoId === foto.id ? "⏳" : foto.posicion}
+                  
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    disabled={cargandoFotoId !== null}
+                    onChange={(e) => {
+                      cambiarFotoFondo(e, foto.id, foto.posicion);
+                      setIsPanelFotosOpen(false); // Cierra el menú al clickear
+                    }} 
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
