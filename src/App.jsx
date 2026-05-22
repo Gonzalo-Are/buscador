@@ -260,8 +260,10 @@ function App() {
           <div className="bg-[#FFC4E1] rounded-[20px] p-6 shadow-xl border-none">
             <h3 className="text-white font-bold mb-4 text-center flex items-center justify-center gap-2"><span>✨</span> Mensaje de Hoy <span>✨</span></h3>
             {mensajeDeHoy ? (
-              <div className="text-center py-6 animate-fade-in">
-                <p className="text-white text-xl italic font-serif">"{mensajeDeHoy.content}"</p>
+              <div className="text-center py-6 animate-fade-in w-full overflow-hidden">
+                <p className="text-white text-xl italic font-serif break-all whitespace-pre-wrap max-w-full">
+                  {mensajeDeHoy.content}
+                </p>
               </div>
             ) : (
               <div className="flex flex-col gap-4">
