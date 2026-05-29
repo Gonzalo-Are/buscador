@@ -9,6 +9,8 @@ function App() {
   const [butterflies, setButterflies] = useState([]);
   const [corazones, setCorazones] = useState(0);
   const [isLetterOpen, setIsLetterOpen] = useState(false);
+  const [mostrarSplash, setMostrarSplash] = useState(true);
+  const [opacidadSplash, setOpacidadSplash] = useState("opacity-100");
   
   // Estados nuevos para el control de fotos dinámicas
   const [fotosFondo, setFotosFondo] = useState([]);
@@ -36,6 +38,24 @@ function App() {
     };
     obtenerCorazones();
   }, []);
+
+  // Temporizador de 4 segundos para desvanecer la foto de bienvenida
+useEffect(() => {
+  // A los 3.5 segundos empieza a desvanecerse (dura 500ms la transición)
+  const timerOpacidad = setTimeout(() => {
+    setOpacidadSplash("opacity-0 pointer-events-none");
+  }, 3500);
+
+  // A los 4 segundos se elimina por completo de la pantalla
+  const timerRemover = setTimeout(() => {
+    setMostrarSplash(false);
+  }, 4000);
+
+  return () => {
+    clearTimeout(timerOpacidad);
+    clearTimeout(timerRemover);
+  };
+}, []);
 
   // 2. Cargar mensaje del día
   useEffect(() => {
@@ -199,6 +219,21 @@ function App() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
+        
+        {/* PANTALLA DE BIENVENIDA (SPLASH SCREEN) */}
+{mostrarSplash && (
+  <div className={`fixed inset-0 z-[300] bg-black flex items-center justify-center transition-opacity duration-500 ease-in-out ${opacidadSplash}`}>
+    <img 
+      src="/intro-1582038150.jpg" // Puse la foto "seis" de ejemplo, cámbiala por la que tú quieras que parpadee al inicio
+      alt="Bienvenida" 
+      className="w-full h-full object-cover md:w-auto md:h-[80vh] md:rounded-2xl shadow-2xl"
+    />
+  </div>
+)}
+
+
+
+
       {/* BOTÓN CORAZÓN (Arriba Derecha) */}
       <div className="absolute top-5 right-5 flex gap-3 z-50">
         <button 
