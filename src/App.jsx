@@ -220,7 +220,7 @@ useEffect(() => {
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
         
-        {/* PANTALLA DE BIENVENIDA (SPLASH SCREEN) */}
+        {/* PANTALLA DE BIENVENIDA (SPLASH SCREEN) 
 {mostrarSplash && (
   <div className={`fixed inset-0 z-[300] bg-black flex items-center justify-center transition-opacity duration-500 ease-in-out ${opacidadSplash}`}>
     <img 
@@ -230,7 +230,7 @@ useEffect(() => {
     />
   </div>
 )}
-
+*/}
 
 
 
