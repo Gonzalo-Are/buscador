@@ -17,6 +17,25 @@ function App() {
   const [cargandoFotoId, setCargandoFotoId] = useState(null);
   const [isPanelFotosOpen, setIsPanelFotosOpen] = useState(false);
 
+
+  // fomulario wacho
+
+    // Estados para la Trivia Diaria Interactiva
+  const [isTriviaOpen, setIsTriviaOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("jugar"); // "jugar" o "crear"
+  const [preguntaDelHoy, setPreguntaDelHoy] = useState(null);
+  const [respuestaSeleccionada, setRespuestaSeleccionada] = useState(null);
+  const [triviaFeedback, setTriviaFeedback] = useState("");
+
+  // Estado para el formulario de nueva pregunta
+  const [nuevaPregunta, setNuevaPregunta] = useState("");
+  const [opcionesNuevas, setOpcionesNuevas] = useState(["", "", "", ""]);
+  const [correctaNueva, setCorrectaNueva] = useState(0);
+  const [autorNueva, setAutorNueva] = useState("Mi bb");
+
+  // aca terminar formu
+
+
   const messages = [
     "La mejor polola del mundo ❤️", "Mi persona favorita 💕", "Te quiero demasiado 🫶",
     "Eres todo para mí 💖", "Contigo, cada día es especial 🌟", "Eres mi alegría diaria 😊",
@@ -24,6 +43,85 @@ function App() {
     "Estoy loco por ti💖 ", "Cada dia que pasa me enamoro mas 💗", "Ya quiero darte mil besitos 🥰",
     "Me cambiaste la vida amor 💕", "Contigo, todo es mejor 💖","Apoyo a Jim y a Pam"
   ];
+
+
+  // formu 
+
+
+  // Cargar la pregunta de trivia correspondiente a hoy
+useEffect(() => {
+  const cargarTrivia = async () => {
+    const hoyStr = new Date().toISOString().split('T')[0];
+    
+    // A. Intentar buscar en Supabase primero
+    const { data, error } = await supabase
+      .from('trivia_preguntas')
+      .select('*')
+      .eq('fecha_publicacion', hoyStr)
+      .maybeSingle();
+
+    if (data) {
+      setPreguntaDelHoy(data);
+    } else {
+      // B. Respaldo local si la tabla está vacía o no hay fecha asignada
+      const poolPreguntas = [
+        {
+          id: 101,
+          pregunta: "Si me quedo atrapado en el universo de una de estas series, ¿cual elijo?",
+          opciones: ["Un show mas", "Hora de Aventura", "Gravity Falls", "Phineas y Ferb"],
+          correcta: 3,
+          autor: "Tu bb"
+        },
+        {
+          id: 102,
+          pregunta: "Quien me gusta mas de todos estos?",
+          opciones: ["Myke Towers", "Ozuna", "Bad Bunny", "Anuel AA"],
+          correcta: 1,
+          autor: "Tu bb"
+        },
+        {
+          id: 103,
+          pregunta: "Que me gusta mas de todos estos?",
+          opciones: ["Piscola", "Vino blanco con kem(bebida de piña)", "Fernet con coca", "Whisky con Coca"],
+          correcta: 1,
+          autor: "Tu bb"
+        }
+      ];
+
+      // Seleccionar una fija basada en el día del mes para que no cambie al recargar
+      const diaDelMes = new Date().getDate();
+      const indice = diaDelMes % poolPreguntas.length;
+      setPreguntaDelHoy(poolPreguntas[indice]);
+    }
+  };
+  cargarTrivia();
+  
+  // Recuperar si ya había respondido hoy para mantener el feedback
+  const respondidaHoy = localStorage.getItem(`trivia_respondida_${new Date().toISOString().split('T')[0]}`);
+  if (respondidaHoy) {
+    setRespuestaSeleccionada(parseInt(respondidaHoy));
+    setTriviaFeedback("¡Ya respondiste esta pregunta hoy! ✨");
+  }
+}, []);
+
+
+// formu termina
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // 1. Cargar corazones globales desde Supabase
   useEffect(() => {
@@ -160,6 +258,96 @@ useEffect(() => {
       setMensajeDeHoy({ content: mensaje });
     }
   };
+
+
+
+  // formu 
+
+  // Manejar la respuesta del usuario
+const manejarRespuestaTrivia = (indiceOpcion) => {
+  if (respuestaSeleccionada !== null) return; // Bloquear si ya respondió
+
+  setRespuestaSeleccionada(indiceOpcion);
+  const hoyStr = new Date().toISOString().split('T')[0];
+  localStorage.setItem(`trivia_respondida_${hoyStr}`, indiceOpcion);
+
+  if (indiceOpcion === preguntaDelHoy.correcta) {
+    setTriviaFeedback("CORREEEECTOOOOOU");
+    // Disparar ráfaga de mariposas reutilizando tu función de corazones
+    for(let i=0; i<5; i++) {
+      setTimeout(manejarClickCorazon, i * 300);
+    }
+  } else {
+    setTriviaFeedback("Upsi");
+  }
+};
+
+// Guardar nueva pregunta creada por ella en Supabase
+const guardarNuevaPregunta = async (e) => {
+  e.preventDefault();
+  if (!nuevaPregunta.trim() || opcionesNuevas.some(o => !o.trim())) {
+    alert("Por favor completa la pregunta y las 4 opciones.");
+    return;
+  }
+
+  try {
+    // 1. Buscar la última fecha registrada en la BD para agendar al día siguiente
+    const { data: ultimas } = await supabase
+      .from('trivia_preguntas')
+      .select('fecha_publicacion')
+      .order('fecha_publicacion', { ascending: false })
+      .limit(1);
+
+    let nuevaFecha = new Date();
+    if (ultimas && ultimas.length > 0) {
+      nuevaFecha = new Date(ultimas[0].fecha_publicacion);
+      nuevaFecha.setDate(nuevaFecha.getDate() + 1); // Día siguiente
+    } else {
+      nuevaFecha.setDate(nuevaFecha.getDate() + 1); // Mañana si está vacía
+    }
+
+    const fechaStr = nuevaFecha.toISOString().split('T')[0];
+
+    // 2. Insertar en Supabase
+    const { error } = await supabase
+      .from('trivia_preguntas')
+      .insert([{
+        pregunta: nuevaPregunta,
+        opciones: opcionesNuevas,
+        correcta: correctaNueva,
+        fecha_publicacion: fechaStr,
+        autor: autorNueva
+      }]);
+
+    if (error) throw error;
+
+    alert(`Pregunta guardada , Quedó programada para el día: ${fechaStr} 🎉`);
+    
+    // Limpiar formulario y cerrar panel
+    setNuevaPregunta("");
+    setOpcionesNuevas(["", "", "", ""]);
+    setIsTriviaOpen(false);
+
+  } catch (error) {
+    console.error("Error guardando pregunta:", error.message);
+    alert("No se pudo conectar a la base de datos de trivia, revisa si creaste la tabla.");
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // 6. Lógica de Corazón (Persistencia + Mariposas)
   const manejarClickCorazon = async () => {
@@ -370,6 +558,159 @@ useEffect(() => {
           </div>
         )}
       </div>
+
+
+        {/* BOTÓN FLOTANTE TRIVIA DIARIA (Abajo a la derecha) */}
+<div className="fixed bottom-5 right-5 z-[100]">
+  <button 
+    onClick={() => setIsTriviaOpen(!isTriviaOpen)}
+    className="bg-white/80 backdrop-blur-md border border-white/40 p-3 rounded-full shadow-2xl text-xl hover:scale-110 active:scale-95 transition-all cursor-pointer flex items-center justify-center h-12 w-12"
+    title="Trivia del Día"
+  >
+    🧠
+  </button>
+
+  {/* PANEL PRINCIPAL DE TRIVIA */}
+  {isTriviaOpen && (
+    <div className="absolute bottom-14 right-0 bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-2xl border border-gray-200 w-80 md:w-96 text-gray-800 animate-fade-in">
+      
+      {/* PESTAÑAS (TABS) */}
+      <div className="flex border-b border-gray-200 mb-4 text-sm font-bold">
+        <button 
+          onClick={() => setActiveTab("jugar")}
+          className={`flex-1 pb-2 text-center transition-colors ${activeTab === "jugar" ? "text-pink-600 border-b-2 border-pink-600" : "text-gray-400"}`}
+        >
+          Responder
+        </button>
+        <button 
+          onClick={() => setActiveTab("crear")}
+          className={`flex-1 pb-2 text-center transition-colors ${activeTab === "crear" ? "text-pink-600 border-b-2 border-pink-600" : "text-gray-400"}`}
+        >
+          Añadir Pregunta
+        </button>
+      </div>
+
+      {/* CONTENIDO PESTAÑA: JUGAR */}
+      {activeTab === "jugar" && (
+        <div className="space-y-4">
+          {preguntaDelHoy ? (
+            <>
+              <div className="text-xs font-semibold text-pink-500  tracking-wider">
+                Pregunta de hoy (Por: {preguntaDelHoy.autor})
+              </div>
+              <h4 className="font-bold text-gray-800 text-base leading-snug">{preguntaDelHoy.pregunta}</h4>
+              
+              <div className="flex flex-col gap-2">
+                {preguntaDelHoy.opciones.map((opcion, index) => {
+                  // Lógica de colores tras responder
+                  let colorBoton = "bg-gray-50 border-gray-200 text-gray-700 hover:bg-pink-50 hover:border-pink-200";
+                  if (respuestaSeleccionada !== null) {
+                    if (index === preguntaDelHoy.correcta) colorBoton = "bg-green-100 border-green-400 text-green-700 font-bold";
+                    else if (respuestaSeleccionada === index) colorBoton = "bg-red-100 border-red-400 text-red-700";
+                    else colorBoton = "bg-gray-100 border-gray-200 text-gray-400 opacity-60";
+                  }
+
+                  return (
+                    <button
+                      key={index}
+                      disabled={respuestaSeleccionada !== null}
+                      onClick={() => manejarRespuestaTrivia(index)}
+                      className={`w-full p-3 text-left text-sm rounded-xl border transition-all ${colorBoton}`}
+                    >
+                      {opcion}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {triviaFeedback && (
+                <div className="text-center text-sm font-bold text-pink-600 bg-pink-50 p-2 rounded-xl animate-pulse mt-2">
+                  {triviaFeedback}
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-gray-500 text-center py-4 text-sm">Cargandoouuu</p>
+          )}
+        </div>
+      )}
+
+      {/* CONTENIDO PESTAÑA: CREAR */}
+      {activeTab === "crear" && (
+        <form onSubmit={guardarNuevaPregunta} className="space-y-3 text-sm">
+          <div>
+            <label className="block text-xs font-bold text-gray-600 mb-1">Escribe la pregunta:</label>
+            <input 
+              type="text" 
+              required
+              value={nuevaPregunta}
+              onChange={(e) => setNuevaPregunta(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-pink-400 text-sm"
+              placeholder="Te quiero bb linda"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-gray-600">Opciones linda, el que tenga el circulo marcado es el correcto</label>
+            {opcionesNuevas.map((opcion, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <input 
+                  type="radio" 
+                  name="correctaRadio" 
+                  checked={correctaNueva === idx}
+                  onChange={() => setCorrectaNueva(idx)}
+                  className="accent-pink-500 h-4 w-4 cursor-pointer"
+                />
+                <input 
+                  type="text" 
+                  required
+                  value={opcion}
+                  onChange={(e) => {
+                    const copia = [...opcionesNuevas];
+                    copia[idx] = e.target.value;
+                    setOpcionesNuevas(copia);
+                  }}
+                  className="w-full p-2 border border-gray-300 rounded-lg outline-none text-xs"
+                  placeholder={`Opción ${idx + 1}`}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-4 pt-2">
+            <div className="flex-1">
+              <label className="block text-xs font-bold text-gray-600 mb-1">Quien?</label>
+              <select 
+                value={autorNueva} 
+                onChange={(e) => setAutorNueva(e.target.value)}
+                className="w-full p-1.5 border border-gray-300 rounded-lg bg-white text-xs"
+              >
+                <option value="Mi bb">Mi bb</option>
+                <option value="Tu bb">Tu bb</option>
+              </select>
+            </div>
+            <button 
+              type="submit"
+              className="flex-1 mt-5 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-lg text-xs transition-colors"
+            >
+              Guardar Pregunta
+            </button>
+          </div>
+        </form>
+      )}
+
+    </div>
+  )}
+</div>
+
+
+
+
+
+
+
+
+
 
     </div>
   );
