@@ -32,6 +32,7 @@ function App() {
   const [opcionesNuevas, setOpcionesNuevas] = useState(["", "", "", ""]);
   const [correctaNueva, setCorrectaNueva] = useState(0);
   const [autorNueva, setAutorNueva] = useState("Mi bb");
+  const [crearTriviaFeedback, setCrearTriviaFeedback] = useState("");
 
   // aca terminar formu
 
@@ -100,7 +101,7 @@ useEffect(() => {
   const respondidaHoy = localStorage.getItem(`trivia_respondida_${new Date().toISOString().split('T')[0]}`);
   if (respondidaHoy) {
     setRespuestaSeleccionada(parseInt(respondidaHoy));
-    setTriviaFeedback("¡Ya respondiste esta pregunta hoy! ✨");
+    setTriviaFeedback("No mas preguntas por hoy linda");
   }
 }, []);
 
@@ -286,12 +287,11 @@ const manejarRespuestaTrivia = (indiceOpcion) => {
 const guardarNuevaPregunta = async (e) => {
   e.preventDefault();
   if (!nuevaPregunta.trim() || opcionesNuevas.some(o => !o.trim())) {
-    alert("Por favor completa la pregunta y las 4 opciones.");
+    setCrearTriviaFeedback("Por favor completar todos los campusiños.");
     return;
   }
 
   try {
-    // 1. Buscar la última fecha registrada en la BD para agendar al día siguiente
     const { data: ultimas } = await supabase
       .from('trivia_preguntas')
       .select('fecha_publicacion')
@@ -301,14 +301,13 @@ const guardarNuevaPregunta = async (e) => {
     let nuevaFecha = new Date();
     if (ultimas && ultimas.length > 0) {
       nuevaFecha = new Date(ultimas[0].fecha_publicacion);
-      nuevaFecha.setDate(nuevaFecha.getDate() + 1); // Día siguiente
+      nuevaFecha.setDate(nuevaFecha.getDate() + 1);
     } else {
-      nuevaFecha.setDate(nuevaFecha.getDate() + 1); // Mañana si está vacía
+      nuevaFecha.setDate(nuevaFecha.getDate() + 1);
     }
 
     const fechaStr = nuevaFecha.toISOString().split('T')[0];
 
-    // 2. Insertar en Supabase
     const { error } = await supabase
       .from('trivia_preguntas')
       .insert([{
@@ -321,19 +320,22 @@ const guardarNuevaPregunta = async (e) => {
 
     if (error) throw error;
 
-    alert(`Pregunta guardada , Quedó programada para el día: ${fechaStr} 🎉`);
+    // Mensaje de éxito estético en la UI
+    setCrearTriviaFeedback(`Guardadau para el día ${fechaStr}! 🎉`);
     
-    // Limpiar formulario y cerrar panel
-    setNuevaPregunta("");
-    setOpcionesNuevas(["", "", "", ""]);
-    setIsTriviaOpen(false);
+    // Espera 2.5 segundos mostrando el mensaje lindo antes de limpiar y cerrar
+    setTimeout(() => {
+      setNuevaPregunta("");
+      setOpcionesNuevas(["", "", "", ""]);
+      setCrearTriviaFeedback("");
+      setIsTriviaOpen(false);
+    }, 2500);
 
   } catch (error) {
     console.error("Error guardando pregunta:", error.message);
-    alert("No se pudo conectar a la base de datos de trivia, revisa si creaste la tabla.");
+    setCrearTriviaFeedback("Error de conexión al guardari.");
   }
 };
-
 
 
 
@@ -630,7 +632,11 @@ const guardarNuevaPregunta = async (e) => {
               )}
             </>
           ) : (
-            <p className="text-gray-500 text-center py-4 text-sm">Cargandoouuu</p>
+            <div className="text-center py-6 px-4 space-y-2">
+        <p className="text-lg"></p>
+        <p className="text-gray-600 font-medium text-sm">No hay preguntas wacha</p>
+        <p className="text-xs text-pink-500 italic">Tocara escribir preguntitis</p>
+      </div>
           )}
         </div>
       )}
@@ -679,7 +685,7 @@ const guardarNuevaPregunta = async (e) => {
 
           <div className="flex gap-4 pt-2">
             <div className="flex-1">
-              <label className="block text-xs font-bold text-gray-600 mb-1">Quien?</label>
+              <label className="block text-xs font-bold text-gray-600 mb-1">Quien escribe?</label>
               <select 
                 value={autorNueva} 
                 onChange={(e) => setAutorNueva(e.target.value)}
@@ -696,6 +702,16 @@ const guardarNuevaPregunta = async (e) => {
               Guardar Pregunta
             </button>
           </div>
+          {/* MUESTRA EL FEEDBACK VISUAL AQUÍ ABAJO */}
+          {crearTriviaFeedback && (
+            <div className={`text-center text-xs font-bold p-2 mt-2 rounded-lg border animate-fade-in ${
+              crearTriviaFeedback.includes("✨") 
+                ? "bg-green-50 border-green-200 text-green-600" 
+                : "bg-red-50 border-red-200 text-red-600"
+            }`}>
+              {crearTriviaFeedback}
+            </div>
+          )}
         </form>
       )}
 
