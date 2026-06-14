@@ -54,7 +54,6 @@ useEffect(() => {
   const cargarTrivia = async () => {
     const hoyStr = new Date().toISOString().split('T')[0];
     
-    // A. Intentar buscar en Supabase primero
     const { data, error } = await supabase
       .from('trivia_preguntas')
       .select('*')
@@ -63,6 +62,16 @@ useEffect(() => {
 
     if (data) {
       setPreguntaDelHoy(data);
+      
+      // SI YA FUE RESPONDIDA EN LA BD, BLOQUEAMOS AUTOMÁTICAMENTE AQUÍ
+      if (data.ya_respondida) {
+        setRespuestaSeleccionada(data.respuesta_elegida);
+        if (data.respuesta_elegida === data.correcta) {
+          setTriviaFeedback("ta respondida wacha y salio bien");
+        } else {
+          setTriviaFeedback("ta respondida wacha y salio mal");
+        }
+      }
     } else {
       // B. Respaldo local si la tabla está vacía o no hay fecha asignada
       const poolPreguntas = [
@@ -92,18 +101,19 @@ useEffect(() => {
       // Seleccionar una fija basada en el día del mes para que no cambie al recargar
       const diaDelMes = new Date().getDate();
       const indice = diaDelMes % poolPreguntas.length;
-      setPreguntaDelHoy(poolPreguntas[indice]);
+      const localPregunta = poolPreguntas[indice];
+      setPreguntaDelHoy(localPregunta);
+
+      const respondidaLocal = localStorage.getItem(`trivia_respondida_${hoyStr}`);
+      if (respondidaLocal) {
+        setRespuestaSeleccionada(parseInt(respondidaLocal));
+        setTriviaFeedback("Ya se respondio la preguntiña");
+      }
     }
   };
-  cargarTrivia();
   
-  // Recuperar si ya había respondido hoy para mantener el feedback
-  const respondidaHoy = localStorage.getItem(`trivia_respondida_${new Date().toISOString().split('T')[0]}`);
-  if (respondidaHoy) {
-    setRespuestaSeleccionada(parseInt(respondidaHoy));
-    setTriviaFeedback("No mas preguntas por hoy linda");
-  }
-}, []);
+  cargarTrivia();
+}, [isTriviaOpen]);
 
 
 // formu termina
@@ -264,13 +274,32 @@ useEffect(() => {
 
   // formu 
 
-  // Manejar la respuesta del usuario
-const manejarRespuestaTrivia = (indiceOpcion) => {
-  if (respuestaSeleccionada !== null) return; // Bloquear si ya respondió
+ const manejarRespuestaTrivia = async (indiceOpcion) => {
+  if (respuestaSeleccionada !== null) return; // Evitar doble click
 
+  // 1. Bloqueo visual instantáneo en el cliente
   setRespuestaSeleccionada(indiceOpcion);
-  const hoyStr = new Date().toISOString().split('T')[0];
-  localStorage.setItem(`trivia_respondida_${hoyStr}`, indiceOpcion);
+
+  // 2. Si la pregunta viene de Supabase, actualizamos el estado global
+  if (preguntaDelHoy && preguntaDelHoy.id < 100) { // Tus preguntas de la BD
+    try {
+      const { error } = await supabase
+        .from('trivia_preguntas')
+        .update({ 
+          ya_respondida: true, 
+          respuesta_elegida: indiceOpcion 
+        })
+        .eq('id', preguntaDelHoy.id);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error("Error al sincronizar respuesta global:", err.message);
+    }
+  } else {
+    // Respaldo local en localStorage si usan el pool de emergencia
+    const hoyStr = new Date().toISOString().split('T')[0];
+    localStorage.setItem(`trivia_respondida_${hoyStr}`, indiceOpcion);
+  }
 
   if (indiceOpcion === preguntaDelHoy.correcta) {
     setTriviaFeedback("CORREEEECTOOOOOU");
