@@ -17,6 +17,11 @@ function App() {
   const [cargandoFotoId, setCargandoFotoId] = useState(null);
   const [isPanelFotosOpen, setIsPanelFotosOpen] = useState(false);
 
+  const [puntajeGonzalo, setPuntajeGonzalo] = useState(0);
+  const [puntajeWacha, setPuntajeWacha] = useState(0);
+
+
+
 
   // fomulario wacho
 
@@ -113,6 +118,7 @@ useEffect(() => {
   };
   
   cargarTrivia();
+  calcularMarcadorGlobal();
 }, [isTriviaOpen]);
 
 
@@ -304,6 +310,7 @@ useEffect(() => {
   if (indiceOpcion === preguntaDelHoy.correcta) {
     setTriviaFeedback("CORREEEECTOOOOOU");
     // Disparar ráfaga de mariposas reutilizando tu función de corazones
+    calcularMarcadorGlobal();
     for(let i=0; i<5; i++) {
       setTimeout(manejarClickCorazon, i * 300);
     }
@@ -367,10 +374,44 @@ const guardarNuevaPregunta = async (e) => {
 };
 
 
+//counter
 
 
 
 
+
+
+const calcularMarcadorGlobal = async () => {
+  try {
+    // Traer solo las preguntas que ya fueron respondidas
+    const { data, error } = await supabase
+      .from('trivia_preguntas')
+      .select('autor, correcta, respuesta_elegida')
+      .eq('ya_respondida', true);
+
+    if (error) throw error;
+
+    let puntosGonzalo = 0;
+    let puntosWacha = 0;
+
+    data.forEach(pregunta => {
+      // Verificar si la respuesta fue correcta
+      if (pregunta.respuesta_elegida === pregunta.correcta) {
+        // Si la creó Gonzalo y está buena, el punto es de ella. Si la creó ella, el punto es de Gonzalo.
+        if (pregunta.autor === "Tu bb") {
+          puntosWacha += 1;
+        } else if (pregunta.autor === "Mi bb") {
+          puntosGonzalo += 1;
+        }
+      }
+    });
+
+    setPuntajeGonzalo(puntosGonzalo);
+    setPuntajeWacha(puntosWacha);
+  } catch (err) {
+    console.error("Error al calcular el marcador:", err.message);
+  }
+};
 
 
 
@@ -604,7 +645,33 @@ const guardarNuevaPregunta = async (e) => {
   {/* PANEL PRINCIPAL DE TRIVIA */}
   {isTriviaOpen && (
     <div className="absolute bottom-14 right-0 bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-2xl border border-gray-200 w-80 md:w-96 text-gray-800 animate-fade-in">
-      
+
+
+        {/* CONTADOR DE PUNTOS COMPARTIDO */}
+        <div className="bg-pink-50/60 border border-pink-100 rounded-xl p-3 mb-4 text-center">
+          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Puntaje (Si me ganas = robo)</div>
+          <div className="flex justify-around items-center">
+            <div className="text-center">
+              <div className="text-xs font-semibold text-gray-600">Tu bb</div>
+              <div className="text-2xl font-black text-pink-600">{puntajeGonzalo}</div>
+            </div>
+            <div className="text-gray-300 font-light text-xl">vs</div>
+            <div className="text-center">
+              <div className="text-xs font-semibold text-gray-600">Mi bb</div>
+              <div className="text-2xl font-black text-pink-600">{puntajeWacha}</div>
+            </div>
+          </div>
+          {/* Mensaje dinámico de quién va ganando */}
+          <div className="text-[10px] text-gray-400 mt-2 italic">
+            {puntajeGonzalo > puntajeWacha && "Voy ganando wacha"}
+            {puntajeWacha > puntajeGonzalo && "Va ganando mi bb "}
+            {puntajeGonzalo === puntajeWacha && "Empatadus por ahora jijijiji."}
+          </div>
+        </div>
+
+
+
+
       {/* PESTAÑAS (TABS) */}
       <div className="flex border-b border-gray-200 mb-4 text-sm font-bold">
         <button 
