@@ -85,7 +85,7 @@ export default function Cartelera() {
   return (
     <div 
     // CAMBIAMOS: 'bg-cover bg-center' POR 'bg-contain bg-repeat'
-    className="min-h-screen text-gray-800 p-4 md:p-8 flex flex-col items-center bg-contain bg-repeat"
+    className="min-h-screen text-gray-800 p-4 md:p-8 flex flex-col items-center bg-contain bg-repeat "
   >
       <div className="w-full max-w-2xl bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-pink-100">
         
@@ -167,7 +167,7 @@ export default function Cartelera() {
         {/* Listado de Contenido */}
         <div className="space-y-3">
           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Lista</div>
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
             {cargando ? (
               <p className="text-xs text-gray-400 text-center py-6">Cargando </p>
             ) : lista.length === 0 ? (
