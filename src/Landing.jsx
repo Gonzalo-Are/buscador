@@ -546,7 +546,7 @@ const calcularMarcadorGlobal = async () => {
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-20 animate-fly-plane">
-          <img src="/pngtree-image-with-airplane-theme-3-message-travel-man-vector-png-image_8792442.jpg" className="h-30 w-auto" alt="Avioncito" />
+          <img src="/pngtree-image-with-airplane-theme-3-message-travel-man-vector-png-image_8792442.jpg" className="h-40 w-auto" alt="Avioncito" />
         </div>
       </div>
 
@@ -561,7 +561,7 @@ const calcularMarcadorGlobal = async () => {
         <div className="mt-6 w-full max-w-lg text-center bg-white/75 p-4 rounded-2xl shadow-lg border border-white/20 mx-4">
           <h2 className="text-gray-700 font-medium mb-1 text-sm uppercase tracking-wider">Días para ver a mi novio</h2>
           <div id="countdown-timer" className="text-3xl md:text-4xl font-bold text-gray-800 tracking-tight">00d 00h 00m 00s</div>
-          <div id="arrival-message" className="hidden text-xl font-bold text-pink-600 animate-bounce mt-2">Agarrate wacha que voy llegando así</div>
+          <div id="arrival-message" className="hidden text-xl font-bold text-pink-600 animate-bounce mt-2">Cuando compre el pasaje esto cambiara te amo.</div>
         </div>
       
         {!isLetterOpen && (
