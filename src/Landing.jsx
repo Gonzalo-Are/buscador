@@ -461,7 +461,7 @@ const calcularMarcadorGlobal = async () => {
 
   // 8. Timer de cuenta regresiva
   useEffect(() => {
-    const targetDate = new Date("2026-07-15T20:30:00-04:00").getTime();
+    const targetDate = new Date("2026-12-05T21:30:00-04:00").getTime();
     const timer = setInterval(() => {
       const now = new Date().getTime();
       const distance = targetDate - now;
