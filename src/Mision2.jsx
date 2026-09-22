@@ -1,373 +1,254 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
-// Reproductor de tonos sintéticos
-class AudioSynth {
-  constructor() {
-    this.ctx = null;
-    this.isPlaying = false;
-    this.timeoutIds = [];
-  }
 
-  init() {
-    if (!this.ctx) {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-  }
+const DEV_MODE = true; 
+const PLAY_DURATION_SECONDS = 6;
 
-  playNote(freq, type = 'sine', duration = 0.3, startTime = 0) {
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + startTime);
-    
-    gain.gain.setValueAtTime(0.2, this.ctx.currentTime + startTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + startTime + duration);
-    
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    
-    osc.start(this.ctx.currentTime + startTime);
-    osc.stop(this.ctx.currentTime + startTime + duration);
-  }
-
-  stop() {
-    this.timeoutIds.forEach(id => clearTimeout(id));
-    this.timeoutIds = [];
-    this.isPlaying = false;
-  }
-
-  playMelody(notesPattern) {
-    this.init();
-    this.stop();
-    this.isPlaying = true;
-
-    let currentTime = 0;
-    notesPattern.forEach(({ note, duration, type }) => {
-      const tid = setTimeout(() => {
-        if (this.isPlaying) {
-          this.playNote(note, type || 'triangle', duration);
-        }
-      }, currentTime * 1000);
-      this.timeoutIds.push(tid);
-      currentTime += duration;
-    });
-
-    const totalDuration = currentTime * 1000;
-    const endTid = setTimeout(() => {
-      this.isPlaying = false;
-    }, totalDuration);
-    this.timeoutIds.push(endTid);
-
-    return totalDuration / 1000;
-  }
-}
-
-const audioSynth = new AudioSynth();
-
-// Lista de las 6 canciones
-const SONGS_DATASET = [
+const songList = [
   {
     id: 1,
-    title: "Despacito",
-    genre: "Reggaeton / Pop",
-    notes: [
-      { note: 293.66, duration: 0.3 },
-      { note: 369.99, duration: 0.3 },
-      { note: 440.00, duration: 0.3 },
-      { note: 493.88, duration: 0.6 },
-      { note: 440.00, duration: 0.3 },
-      { note: 369.99, duration: 0.3 },
-      { note: 293.66, duration: 0.5 }
-    ],
-    options: ["Despacito - Luis Fonsi", "Dákiti - Bad Bunny", "Bailando - Enrique Iglesias", "Calma - Pedro Capó"],
-    correctIndex: 0,
-    fortuneClue: "🥠 Galleta de la Fortuna: 'El ritmo con más reproducciones. Se toma su tiempo... muy lentamente.'"
+    audioUrl: "/music/Anuel.mp3",
+    title: "Canción 1",
+    correctAnswer: "QUIERE BEBER"
   },
   {
     id: 2,
-    title: "Smooth Criminal",
-    genre: "Pop / Funk Rock",
-    notes: [
-      { note: 440.00, duration: 0.2 }, { note: 440.00, duration: 0.2 },
-      { note: 440.00, duration: 0.2 }, { note: 392.00, duration: 0.2 },
-      { note: 440.00, duration: 0.2 }, { note: 523.25, duration: 0.3 },
-      { note: 440.00, duration: 0.2 }, { note: 392.00, duration: 0.4 }
-    ],
-    options: ["Thriller - Michael Jackson", "Smooth Criminal - Michael Jackson", "Billie Jean - Michael Jackson", "Uptown Funk - Bruno Mars"],
-    correctIndex: 1,
-    fortuneClue: "🥠 Galleta de la Fortuna: '¿Annie, estás bien? El Rey del Pop baila inclinado comiendo Orange Chicken.'"
+    audioUrl: "/music/Arctic.mp3",
+    title: "Canción 2",
+    correctAnswer: "WHEN THE SUN GOES DOWN"
   },
   {
     id: 3,
-    title: "Mamma Mia",
-    genre: "Disco / Pop",
-    notes: [
-      { note: 587.33, duration: 0.25 }, { note: 523.25, duration: 0.25 },
-      { note: 440.00, duration: 0.25 }, { note: 587.33, duration: 0.25 },
-      { note: 659.25, duration: 0.4 }, { note: 587.33, duration: 0.4 }
-    ],
-    options: ["Dancing Queen - ABBA", "Stayin' Alive - Bee Gees", "Mamma Mia - ABBA", "Gimme! Gimme! Gimme! - ABBA"],
-    correctIndex: 2,
-    fortuneClue: "🥠 Galleta de la Fortuna: 'Expresión italiana súper famosa convertida en un clásico disco sueco.'"
+    audioUrl: "/music/Pitbull.mp3",
+    title: "Canción 3",
+    correctAnswer: "TIME OF OUR LIVES"
   },
   {
     id: 4,
-    title: "Star Wars Theme",
-    genre: "Banda Sonora",
-    notes: [
-      { note: 293.66, duration: 0.3 }, { note: 293.66, duration: 0.3 },
-      { note: 293.66, duration: 0.3 }, { note: 392.00, duration: 0.8 },
-      { note: 587.33, duration: 0.8 }, { note: 523.25, duration: 0.2 },
-      { note: 493.88, duration: 0.2 }, { note: 440.00, duration: 0.2 },
-      { note: 783.99, duration: 0.8 }
-    ],
-    options: ["Harry Potter - John Williams", "Jurassic Park - John Williams", "Indiana Jones - John Williams", "Star Wars - John Williams"],
-    correctIndex: 3,
-    fortuneClue: "🥠 Galleta de la Fortuna: 'Que la Fuerza te acompañe mientras pides tus Beijing Beef a través de la galaxia.'"
+    audioUrl: "/music/P.I.M.P.mp3",
+    title: "Canción 4",
+    correctAnswer: "P.I.M.P"
   },
   {
     id: 5,
-    title: "La Macarena",
-    genre: "Pop Latino / Dance",
-    notes: [
-      { note: 349.23, duration: 0.25 }, { note: 349.23, duration: 0.25 },
-      { note: 349.23, duration: 0.25 }, { note: 349.23, duration: 0.25 },
-      { note: 349.23, duration: 0.25 }, { note: 392.00, duration: 0.25 },
-      { note: 440.00, duration: 0.5 }
-    ],
-    options: ["La Macarena - Los del Río", "Aserejé - Las Ketchup", "La Bamba - Los Lobos", "Suavemente - Elvis Crespo"],
-    correctIndex: 0,
-    fortuneClue: "🥠 Galleta de la Fortuna: 'Dale a tu cuerpo alegría... ¡y no olvides mover las caderas!'"
+    audioUrl: "/music/Police.mp3",
+    title: "Canción 5",
+    correctAnswer: "EVERY BREATH YOU TAKE"
   },
   {
     id: 6,
-    title: "Yellow Submarine",
-    genre: "Rock / Pop",
-    notes: [
-      { note: 392.00, duration: 0.3 }, { note: 440.00, duration: 0.3 },
-      { note: 493.88, duration: 0.3 }, { note: 392.00, duration: 0.3 },
-      { note: 329.63, duration: 0.3 }, { note: 329.63, duration: 0.3 },
-      { note: 293.66, duration: 0.6 }
-    ],
-    options: ["Hey Jude - The Beatles", "Yellow Submarine - The Beatles", "Let It Be - The Beatles", "Bohemian Rhapsody - Queen"],
-    correctIndex: 1,
-    fortuneClue: "🥠 Galleta de la Fortuna: 'Un transporte bajo el agua de color muy brillante cantado por la banda de Liverpool.'"
+    audioUrl: "/music/The.mp3",
+    title: "Canción 6",
+    correctAnswer: "SLEEP"
   }
 ];
 
+
 export default function MisionNivel2() {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentSongIndex, setCurrentSongIndex] = useState(0);
+  const [guessInput, setGuessInput] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackProgress, setPlaybackProgress] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [isCorrect, setIsCorrect] = useState(null);
-  const [showHint, setShowHint] = useState(false);
-  const [gameFinished, setGameFinished] = useState(false);
-  const [pandaOrderInput, setPandaOrderInput] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [pandaInput, setPandaInput] = useState('');
+
+  const audioRef = useRef(null);
+  const playTimerRef = useRef(null); 
+
+  const currentSong = songList[currentSongIndex];
+
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [orderFeedback, setOrderFeedback] = useState('');
-
-  const progressInterval = useRef(null);
-  const currentSong = SONGS_DATASET[currentStep];
-
-  // Tu orden favorita exacta de Panda Express
-  const MI_ORDEN_PANDA = "CHOW MEIN Y ORANGE CHICKEN"; 
-
-  const handlePlayAudio = () => {
-    if (isPlaying) {
-      audioSynth.stop();
-      setIsPlaying(false);
-      clearInterval(progressInterval.current);
-      setPlaybackProgress(0);
-      return;
+  // Limpiar temporizador y detener audio al cambiar de canción o desmontar
+  useEffect(() => {
+    stopAudio();
+    if (audioRef.current) {
+      audioRef.current.src = currentSong.audioUrl;
+      audioRef.current.load();
     }
+    return () => clearTimeout(playTimerRef.current);
+  }, [currentSongIndex]);
 
-    setIsPlaying(true);
-    setPlaybackProgress(0);
-
-    const durationSec = audioSynth.playMelody(currentSong.notes);
-    const stepMs = 50;
-    let elapsedMs = 0;
-    const totalMs = durationSec * 1000;
-
-    clearInterval(progressInterval.current);
-    progressInterval.current = setInterval(() => {
-      elapsedMs += stepMs;
-      const pct = Math.min((elapsedMs / totalMs) * 100, 100);
-      setPlaybackProgress(pct);
-
-      if (elapsedMs >= totalMs) {
-        clearInterval(progressInterval.current);
-        setIsPlaying(false);
-        setPlaybackProgress(100);
-      }
-    }, stepMs);
-  };
-
-  const handleOptionSelect = (index) => {
-    if (selectedOption !== null) return;
-    setSelectedOption(index);
-    setIsCorrect(index === currentSong.correctIndex);
-  };
-
-  const handleNextQuestion = () => {
-    audioSynth.stop();
+  const stopAudio = () => {
+    if (playTimerRef.current) clearTimeout(playTimerRef.current);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0; // Reinicia la canción al inicio
+    }
     setIsPlaying(false);
-    clearInterval(progressInterval.current);
-    setPlaybackProgress(0);
-    setSelectedOption(null);
-    setIsCorrect(null);
-    setShowHint(false);
+  };
 
-    if (currentStep + 1 < SONGS_DATASET.length) {
-      setCurrentStep(prev => prev + 1);
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+
+    if (isPlaying) {
+      stopAudio();
     } else {
-      setGameFinished(true);
+      audioRef.current.play()
+        .then(() => {
+          setIsPlaying(true);
+          // Detener automáticamente al cumplir los 6 segundos
+          playTimerRef.current = setTimeout(() => {
+            stopAudio();
+          }, PLAY_DURATION_SECONDS * 1000);
+        })
+        .catch(err => {
+          console.error("Error al reproducir el audio:", err);
+          alert("Asegúrate de que la ruta del archivo .mp3 sea correcta.");
+        });
     }
   };
 
-  const handleVerifyPandaOrder = (e) => {
+  const handleGuessSubmit = (e) => {
     e.preventDefault();
-    if (pandaOrderInput.trim().toUpperCase() === MI_ORDEN_PANDA) {
-      setOrderFeedback('🎉 ¡ORACULO PANDA CORRECTO! Clave del Nivel 3: "MATEMATICAS"');
-      setTimeout(() => {
-        alert('¡Nivel 2 Superado! Pasando al Nivel 3 (Ejercicios Matemáticos)...');
-      }, 1500);
+    if (!guessInput.trim()) return;
+
+    const formattedInput = guessInput.trim().toUpperCase();
+    const formattedCorrect = currentSong.correctAnswer.toUpperCase();
+
+    if (formattedInput === formattedCorrect) {
+      setFeedback('uuuuuuuuuuu');
+      setGuessInput('');
+      stopAudio();
+
+      if (currentSongIndex + 1 < songList.length) {
+        setTimeout(() => {
+          setFeedback('');
+          setCurrentSongIndex(prev => prev + 1);
+        }, 1200);
+      } else {
+        setTimeout(() => {
+          setFeedback('');
+          setIsCompleted(true);
+        }, 1200);
+      }
     } else {
-      setOrderFeedback('❌ Orden incorrecta. Pista: Pide Chow Mein + Orange Chicken');
+      setFeedback('upsi.');
     }
+  };
+
+  const handlePandaVerify = (e) => {
+    e.preventDefault();
+   const cleanInput = pandaInput.trim().toUpperCase();
+
+  // Definimos las palabras clave obligatorias de la orden
+  const requiredKeywords = ["HONEY", "SESAME", "CHICKEN", "BROCCOLI", "BEEF", "FRIED", "RICE"];
+
+  // Comprobamos que TODAS las palabras clave estén en el texto ingresado
+  const isValid = requiredKeywords.every(word => cleanInput.includes(word));
+
+  if (isValid) {
+      setIsUnlocked(true);
+    setOrderFeedback('te amo');
+  } else {
+    setIsUnlocked(false);
+    setOrderFeedback('te amo pero esta malo jsks');
+  }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-rose-950 to-slate-950 text-white p-4 flex items-center justify-center">
-      <div className="max-w-2xl w-full bg-white/10 backdrop-blur-md border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+    <div className="min-h-screen text-black flex items-center justify-center p-4 select-none cursor-default">
+      <audio ref={audioRef} onEnded={stopAudio} preload="auto" />
+
+      <div className="max-w-md w-full bg-white border border-slate-300 rounded-3xl p-6 shadow-2xl space-y-6">
         
-        {/* ENCABEZADO */}
-        <div className="flex justify-between items-center border-b border-white/10 pb-4">
-          <div>
-            <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">Nivel 2 • Panda Express Edition</span>
-            <h1 className="text-2xl font-black text-white">Adivina la Canción 🎵</h1>
-          </div>
-          <div className="bg-orange-500/20 text-orange-300 font-mono font-bold text-sm px-3 py-1.5 rounded-xl border border-orange-500/30">
-            {currentStep + 1} / {SONGS_DATASET.length}
-          </div>
-        </div>
-
-        {!gameFinished ? (
+        {!isCompleted ? (
           <div className="space-y-6">
-            {/* REPRODUCTOR DE AUDIO */}
-            <div className="bg-slate-950/70 p-6 rounded-2xl border border-white/10 text-center space-y-4">
-              <p className="text-xs text-slate-400 font-semibold uppercase">Presiona para escuchar el extracto</p>
-              
-              <button 
-                onClick={handlePlayAudio}
-                className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto transition duration-300 shadow-lg ${
-                  isPlaying ? 'bg-orange-500 scale-105' : 'bg-rose-600 hover:bg-orange-500'
-                }`}
-              >
-                {isPlaying ? '⏸️' : '▶️'}
-              </button>
+            <div className="text-center space-y-2">
+              <h1 className="text-2xl font-black text-black">Nivel 2 : Adivina la cancion </h1>
+  
+            </div>
 
-              {/* BARRA DE PROGRESO DE AUDIO */}
-              <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                <div 
-                  className="bg-orange-500 h-full transition-all duration-100"
-                  style={{ width: `${playbackProgress}%` }}
-                ></div>
+            <div className="bg-slate-100 p-6 rounded-2xl border border-slate-300 text-center space-y-4">
+              <div className="text-4xl"></div>
+              <p className="font-bold text-black text-sm">{currentSong.title}</p>
+              
+              <button
+                type="button"
+                onClick={togglePlay}
+                
+              >
+                {isPlaying ? "⏸" : "▶"}
+              </button>
+            </div>
+
+            <form onSubmit={handleGuessSubmit} className="space-y-3">
+              <input
+                type="text"
+                placeholder="name de la songi"
+                value={guessInput}
+                onChange={(e) => setGuessInput(e.target.value)}
+                className="w-full p-3 rounded-xl bg-slate-50 border-2 border-slate-400 focus:border-black text-black placeholder-slate-500 focus:outline-none text-center font-mono font-bold cursor-text"
+              />
+              <button
+                type="submit"
+                className="w-full py-3.5 bg-black hover:bg-slate-800 text-white font-bold rounded-xl transition duration-200 shadow-md cursor-pointer"
+              >
+                Comprobar
+              </button>
+            </form>
+
+            {feedback && (
+              <p className={`text-center font-black text-sm ${feedback.includes('🎉') ? 'text-emerald-600' : 'text-red-600'}`}>
+                {feedback}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-6 text-center">
+            <div className="bg-slate-100 border border-slate-300 p-6 rounded-2xl space-y-3 shadow-inner">
+              <h2 className="text-xl font-black text-black">Terminaste el nivel 2 amor</h2>
+              <p className="text-xs text-black font-semibold">
+                Ahora que terminaste copia estas coordenadas y donde te salga tienes que responder abajo lo que te pregunte.
+              </p>
+              
+              <div className="bg-white p-4 rounded-xl text-black font-mono text-sm sm:text-base font-black tracking-wider border-2 border-slate-400 select-all shadow-sm">
+                30.01214177943623, -97.86227193004616
               </div>
             </div>
 
-            {/* OPCIONES */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {currentSong.options.map((option, idx) => {
-                let btnStyle = "bg-white/5 border-white/10 text-white hover:bg-white/15";
-                if (selectedOption !== null) {
-                  if (idx === currentSong.correctIndex) {
-                    btnStyle = "bg-emerald-600/40 border-emerald-400 text-emerald-200 font-bold";
-                  } else if (selectedOption === idx) {
-                    btnStyle = "bg-rose-600/40 border-rose-400 text-rose-200 font-bold";
-                  } else {
-                    btnStyle = "bg-white/5 border-white/5 text-slate-500 opacity-40";
-                  }
-                }
+            <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-300">
+              <h3 className="font-bold text-black text-xs uppercase tracking-wide">
+                Que me pido en ese lugar?
+              </h3>
+              
+              <input 
+                type="text"
+                value={pandaInput}
+                onChange={(e) => {
+                  setPandaInput(e.target.value);
+                  if (isUnlocked) setIsUnlocked(false);
+                  if (orderFeedback) setOrderFeedback('');
+                }}
+                className="w-full p-3 rounded-xl bg-white border-2 border-slate-400 focus:border-black text-black text-center font-mono font-bold focus:outline-none cursor-text"
+              />
 
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => handleOptionSelect(idx)}
-                    disabled={selectedOption !== null}
-                    className={`p-4 rounded-xl border text-left text-sm transition ${btnStyle}`}
-                  >
-                    {option}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* PISTA & BOTÓN SIGUIENTE */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-white/10 pt-4">
-              {!showHint ? (
-                <button 
-                  onClick={() => setShowHint(true)}
-                  className="text-xs text-amber-300 hover:underline"
+              {/* Si está validado muestra el Link, si no, el botón de comprobación */}
+              {isUnlocked ? (
+                <Link 
+                  to="/mision3" 
+                  className="inline-block w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition duration-200 shadow-md text-center"
                 >
-                  🥠 Pedir pista de Galleta de la Fortuna
-                </button>
+                  Nivel 3
+                </Link>
               ) : (
-                <p className="text-xs text-amber-200 italic max-w-xs">{currentSong.fortuneClue}</p>
+                <button 
+                  type="button"
+                  onClick={handlePandaVerify}
+                  className="w-full py-3.5 bg-black hover:bg-slate-800 text-white font-bold rounded-xl transition duration-200 shadow-md cursor-pointer"
+                >
+                  🔑
+                </button>
               )}
 
-              {selectedOption !== null && (
-                <button 
-                  onClick={handleNextQuestion}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-orange-500 hover:bg-rose-500 text-slate-950 font-bold rounded-xl text-sm transition"
-                >
-                  {currentStep + 1 === SONGS_DATASET.length ? "Revelar Coordenadas 📍" : "Siguiente Canción ➔"}
-                </button>
+              {orderFeedback && (
+                <p className={`text-center font-black text-sm mt-2 ${isUnlocked ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {orderFeedback}
+                </p>
               )}
             </div>
           </div>
-        ) : (
-          /* PANTALLA FINAL: COORDENADAS + CLAVE PANDA EXPRESS */
-          <div className="space-y-6 text-center">
-  <div className="bg-orange-500/10 border border-orange-500/30 p-6 rounded-2xl space-y-3">
-    <h2 className="text-xl font-bold text-orange-400">📍 ¡Canciones Completadas!</h2>
-    <p className="text-sm text-slate-200">
-      Las 6 canciones han revelado las coordenadas geográficas exactas de nuestra siguiente estación:
-    </p>
-    
-    {/* Coordenadas actualizadas */}
-    <div className="bg-slate-950 p-4 rounded-xl text-pink-400 font-mono text-base sm:text-lg font-bold tracking-wider border border-pink-500/30 select-all">
-      30.01214177943623, -97.86227193004616
-    </div>
-  </div>
-
-  <form onSubmit={handleVerifyPandaOrder} className="space-y-4 bg-white/5 p-6 rounded-2xl border border-white/10">
-    <h3 className="font-bold text-white text-sm">🐼 Para pasar al Nivel 3: Ingresa mi orden exacta de Panda Express</h3>
-    
-    <input 
-      type="text"
-      placeholder="Ej: CHOW MEIN Y ORANGE CHICKEN"
-      value={pandaOrderInput}
-      onChange={(e) => setPandaOrderInput(e.target.value)}
-      className="w-full p-3 rounded-xl bg-slate-950 border border-orange-400 text-white text-center font-mono focus:outline-none"
-    />
-
-    <button 
-      type="submit"
-      className="w-full py-3 bg-orange-500 hover:bg-rose-500 text-slate-950 font-bold rounded-xl transition"
-    >
-      Validar Orden y Pasar al Nivel 3 🔑
-    </button>
-  </form>
-
-  {orderFeedback && (
-    <p className={`font-bold text-sm ${orderFeedback.includes('🎉') ? 'text-green-400' : 'text-red-400'}`}>
-      {orderFeedback}
-    </p>
-  )}
-</div>
         )}
 
       </div>

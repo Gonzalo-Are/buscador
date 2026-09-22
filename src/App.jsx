@@ -2,8 +2,9 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './Landing';
 import Cartelera from './Cartelera';
-import Mision from './mision';
+import Mision from './Mision';
 import Mision2 from './Mision2';
+import Mision3 from './Mision3';
 
 function App() {
   return (
@@ -20,7 +21,9 @@ function App() {
 
         <Route path="/mision" element={<Mision />} />
         
-        <Route path="/mision2" element={<Mision2 />} />
+          <Route path="/mision2" element={<Mision2 />} />
+
+          <Route path="/mision3" element={<Mision3 />} />
       </Routes>
     </Router>
   );

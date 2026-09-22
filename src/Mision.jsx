@@ -176,7 +176,7 @@ export default function MisionNivel1() {
             </div>
 
             <p className="text-xs text-black italic text-center font-medium">
-              Pista: A cada letra le sobraron 3 posiciones en el alfabeto (ej: D ➔ A, E ➔ B).
+              Pista: D ➔ A.
             </p>
 
             <form onSubmit={handleVerifyCipher} className="space-y-3">
