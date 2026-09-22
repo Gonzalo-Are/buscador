@@ -830,7 +830,13 @@ const calcularMarcadorGlobal = async () => {
         </form>
       )}
 
-
+      <footer className="text-center py-6 text-slate-400 text-xs">
+      <p>© 2026 - Hecho con amor</p>
+      {/* Enlace sutil u oculto */}
+      <Link to="/mision" className="opacity-20 hover:opacity-100 transition-opacity ml-2">
+        🚀
+      </Link>
+    </footer>
 
 
     </div>
