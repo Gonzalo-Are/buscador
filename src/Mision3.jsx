@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 // -------------------------------------------------------------
 // 🛠️ MODO DESARROLLADOR
-const DEV_MODE = true; 
+const DEV_MODE = false; 
 // -------------------------------------------------------------
 
 // Ruta de tu archivo PDF (colócalo en la carpeta /public)

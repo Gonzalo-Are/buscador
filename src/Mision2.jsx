@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 
-const DEV_MODE = true; 
+const DEV_MODE = false; 
 const PLAY_DURATION_SECONDS = 6;
 
 const songList = [
